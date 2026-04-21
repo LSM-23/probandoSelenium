@@ -1,39 +1,45 @@
-// Importamos los módulos necesarios de k6
-// 'http' nos permite hacer las peticiones a la web o API
 import http from 'k6/http';
-// 'check' nos sirve para validar que la respuesta sea correcta (ej. que devuelva un status 200)
-import { check } from 'k6';
-// 'sleep' pausa la ejecución para simular el tiempo que un usuario real tarda en leer la página
-import { sleep } from 'k6';
+import { check, sleep } from 'k6';
 
-// 1. CONFIGURACIÓN (Opciones de la prueba)
+// 1. CONFIGURACIÓN
 export const options = {
-    // vus = Virtual Users (Usuarios Virtuales). 
-    // Aquí simularemos 10 usuarios conectados al mismo tiempo.
-    vus: 10,
-    
-    // duration = Cuánto tiempo durará la prueba. 
-    // En este caso, la prueba se ejecutará durante 30 segundos.
-    duration: '30s',
+    // Usaremos 5 usuarios durante 15 segundos para esta prueba rápida
+    vus: 2,
+    duration: '10s',
 };
 
-// 2. FUNCIÓN PRINCIPAL (El comportamiento del usuario)
-// Esta función principal se ejecutará repetidamente por cada usuario virtual
+// 2. FUNCIÓN PRINCIPAL
 export default function () {
-    // Definimos la URL que vamos a probar. 
-    // Usamos una API pública de prueba diseñada específicamente para esto.
-    const url = 'https://test.k6.io';
+    const url = 'https://httpbin.org/bearer';
+    
+    // Este es nuestro token de prueba. 
+    // En tu sistema real, aquí iría tu token JWT o tu API Key.
+    const token = 'Listo';
 
-    // Hacemos una petición GET a la URL
-    const respuesta = http.get(url);
+    // Configuramos los parámetros de la petición, incluyendo las cabeceras (headers)
+    const parametros = {
+        headers: {
+            // El formato "Bearer <token>" es el estándar más común en la industria
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    };
 
-    // Verificamos que la petición haya sido exitosa
-    // Comprobamos si el estado HTTP de la respuesta es 200 (OK)
+    // Hacemos la petición GET, pasando la URL y los parámetros con el token
+    const respuesta = http.get(url, parametros);
+
+    // Validamos que el servidor nos haya dejado entrar
     check(respuesta, {
+        // Un 200 significa "OK, puedes pasar"
         'el estado es 200': (r) => r.status === 200,
+        // Un 401 significaría "No autorizado" (puedes probar rompiendo el token a propósito para ver este error)
     });
 
-    // Hacemos que el usuario virtual espere 1 segundo antes de volver a intentar
-    // Esto simula el comportamiento humano realista
+    if (__ITER === 0 && __VU === 1) {
+        console.log('\n--- RESPUESTA DEL SERVIDOR ---');
+        console.log(respuesta.body);
+        console.log('------------------------------\n');
+    }
+
     sleep(1);
 }
