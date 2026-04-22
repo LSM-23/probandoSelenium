@@ -5,7 +5,7 @@ import { check, sleep } from 'k6';
 export const options = {
     // Usaremos pocos usuarios para que la terminal no se inunde de mensajes
     vus: 3,
-    duration: '10s',
+    duration: '30s',
 };
 
 // 2. FUNCIÓN PRINCIPAL
@@ -27,7 +27,7 @@ export default function () {
         },
     };
 
-    // C. Hacemos la petición POST (nota que ahora usamos http.post y pasamos los 3 argumentos)
+    // C. Hacemos la petición POST 
     const respuesta = http.post(url, datos, parametros);
 
     // D. Convertimos la respuesta del servidor a un objeto JavaScript para poder leerla
@@ -36,18 +36,26 @@ export default function () {
     // E. Validamos la respuesta
     check(respuesta, {
         'el estado es 200': (r) => r.status === 200,
-        // httpbin devuelve lo que le enviamos dentro de una propiedad llamada "json"
         'el servidor recibió el usuario correcto': (r) => respuestaJSON.json.usuario === 'estudiante_k6',
     });
 
-    // F. EXTRA: Imprimir la respuesta en consola
-    // Usamos esta condición para que solo el Usuario 1 en su primera vuelta imprima el mensaje.
-    // Si no, ¡tus 3 usuarios imprimirían esto sin parar durante 10 segundos!
-    if (__ITER === 0 && __VU === 1) {
-        console.log('\n--- RESPUESTA DEL SERVIDOR ---');
-        console.log(respuesta.body);
-        console.log('------------------------------\n');
-    }
+    // =========================================================
+    // F. BLOQUE PARA EL EQUIPO DE QA (Historial detallado)
+    // =========================================================
+    
+    // Empaquetamos la información clave de esta iteración en un objeto
+    const registroQA = {
+        usuario_virtual: __VU,
+        iteracion: __ITER,
+        estado: respuesta.status,
+        // Guardamos directamente los datos que httpbin nos confirma que recibió
+        datos_confirmados: respuestaJSON.json 
+    };
+
+    // Imprimimos el objeto en formato JSON con espaciado (el '2' da formato legible)
+    console.info(JSON.stringify(registroQA, null, 2));
+
+    // =========================================================
 
     sleep(1);
 }
