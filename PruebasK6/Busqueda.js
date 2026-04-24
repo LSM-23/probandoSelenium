@@ -4,7 +4,7 @@ import { check, sleep } from 'k6';
 // 1. CONFIGURACIÓN
 export const options = {
     vus: 3,          // 3 usuarios virtuales
-    duration: '15s', // Durante 15 segundos
+    iterations: 10, // Cada usuario hará 10 búsquedas
 };
 
 // 2. DATOS DINÁMICOS
@@ -34,11 +34,20 @@ export default function () {
     const respuestaJSON = respuesta.json();
 
     // E. Validamos que la búsqueda fue exitosa
-    check(respuesta, {
+    const Pasocheck = check(respuesta, {
         'el estado es 200 (OK)': (r) => r.status === 200,
         // dummyjson nos devuelve un campo "total" indicando cuántos items encontró
         'la API devolvió la propiedad total': (r) => respuestaJSON.total !== undefined,
     });
+
+    // B. Imprimimos en la terminal "en vivo" durante la ejecución
+    if (Pasocheck) {
+        // Si el check devolvió 'true'
+        console.log(`[Usuario: ${__VU} | Vuelta: ${__ITER}] ✅ Estado 200: EXITOSO`);
+    } else {
+        // Si el check devolvió 'false' (puedes probar cambiar el 200 por 404 arriba para ver este error)
+        console.error(`[Usuario: ${__VU} | Vuelta: ${__ITER}] ❌ Estado 200: FALLÓ (El servidor devolvió: ${respuesta.status})`);
+    }
 
     // =========================================================
     // F. BLOQUE PARA EL EQUIPO DE QA
