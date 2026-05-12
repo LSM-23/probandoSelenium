@@ -52,10 +52,10 @@ export default function(datosDelSetup){
 // 3. TEARDOWN: LIMPIEZA (Se ejecuta 1 vez al final)
 // ==========================================
 
-export function Teardown(datosDelSetup){
+export function teardown(datosDelSetup){
     console.log(`\n${colorRojo}🧹 [TEARDOWN] La prueba terminó. Iniciando limpieza...${colorReset}`);
 
-    const urlBorrar = `https://dummyjson.com/products/2`;
+    const urlBorrar = `https://dummyjson.com/products/1`;
 
     const respuestaBorrar = http.del(urlBorrar);
 
